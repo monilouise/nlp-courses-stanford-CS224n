@@ -113,8 +113,6 @@ def negSamplingCostAndGradient(predicted, target, outputVectors, dataset,
     gradPred = np.dot(gradZ, u)
 
     grad = np.zeros_like(outputVectors)
-
-    # Meu código:
     for k in range(K + 1):
         grad[indices[k]] += signs[k] * (sigmoids[k] - 1) * predicted
     ### END YOUR CODE
