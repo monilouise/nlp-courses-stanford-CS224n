@@ -66,14 +66,7 @@ def softmaxCostAndGradient(predicted, target, outputVectors, dataset):
     gradPred = np.dot(outputVectors.T, y_hat)
 
     # the gradient with respect to all the other word vectors
-    # Meu código:
     grad = np.array([y_h * predicted for y_h in y_hat])
-
-    # Código disponibilizado em http://www.amendgit.com/2017/cs224n-assignment-1/#3-word2vec-40-points-2-bonus:
-    # N, D = outputVectors.shape
-    # reshaped_y_hat = y_hat.reshape(N, 1)
-    # reshaped_predicted = predicted.reshape(1, D)
-    # grad = np.dot(reshaped_y_hat, reshaped_predicted)
     ### END YOUR CODE
 
     return cost, gradPred, grad
@@ -116,7 +109,6 @@ def negSamplingCostAndGradient(predicted, target, outputVectors, dataset,
     u = outputVectors[indices]
     sigmoids = sigmoid(np.dot(u, predicted) * signs)
     cost = -np.sum(np.log(sigmoids))
-    # OBS.: OTIMIZAÇÃO 1: Antes, inadvertidamente, o cálculo de sigmoids estava sendo feito 2 vezes.
     gradZ = signs * (sigmoids - 1)
     gradPred = np.dot(gradZ, u)
 
@@ -125,13 +117,6 @@ def negSamplingCostAndGradient(predicted, target, outputVectors, dataset,
     # Meu código:
     for k in range(K + 1):
         grad[indices[k]] += signs[k] * (sigmoids[k] - 1) * predicted
-
-    # OTIMIZAÇÃO 1: Código disponibilizado em http://www.amendgit.com/2017/cs224n-assignment-1/#3-word2vec-40-points-2-bonus:
-    # reshaped_gradZ = gradZ.reshape(K + 1, 1)
-    # reshaped_predicted = predicted.reshape(1, predicted.shape[0])
-    # gradu = reshaped_gradZ.dot(reshaped_predicted)
-    # for k in range(K + 1):
-    #     grad[indices[k]] += gradu[k, :]
     ### END YOUR CODE
 
     return cost, gradPred, grad
@@ -161,30 +146,7 @@ def skipgram(currentWord, C, contextWords, tokens, inputVectors, outputVectors,
     grad -- the gradient with respect to the word vectors
     """
 
-    # Meu código:
-    # cost = 0.0
-    # gradIn = np.zeros(inputVectors.shape)
-    # gradOut = np.zeros(outputVectors.shape)
-    #
-    # ### YOUR CODE HERE
-    # index = tokens[currentWord]
-    # costs, gradPreds, grads = zip(
-    #     *[word2vecCostAndGradient(inputVectors[index], tokens[target], outputVectors,
-    #                               dataset) for target in contextWords])
-    #
-    # gradPreds = np.array(gradPreds)
-    # grads = np.array(grads)
-    #
-    # cost = np.sum(costs)
-    # gradIn[index] = np.sum(gradPreds, axis=0)
-    #
-    # j = 0
-    # for contextWord in contextWords:
-    #     gradOut += grads[j]
-    #     j += 1
-
-    # Código disponibilizado em http://www.amendgit.com/2017/cs224n-assignment-1/#3-word2vec-40-points-2-bonus:
-    # OTIMIZAÇÃO 2
+    # Based on http://www.amendgit.com/2017/cs224n-assignment-1/#3-word2vec-40-points-2-bonus:
     cost = 0.0
     gradIn = np.zeros(inputVectors.shape)
     gradOut = np.zeros(outputVectors.shape)
