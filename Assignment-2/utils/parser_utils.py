@@ -116,27 +116,62 @@ class Parser(object):
 
         p_features = []
         l_features = []
-        features = [self.NULL] * (3 - len(stack)) + [ex['word'][x] for x in stack[-3:]]
-        features += [ex['word'][x] for x in buf[:3]] + [self.NULL] * (3 - len(buf))
+
+        #Inicialmente, quando a pilha só tem 1 elemento (?) retorna [NULL, NULL]
+        primeira_parte = [self.NULL] * (3 - len(stack))
+
+        #Inicialmente, quando a pilha so tem 1 elemento (?), retorna [ROOT]
+        #Retorna ate as 3 primeiras palavras no topo da pilha
+        #3 features
+        segunda_parte = [ex['word'][x] for x in stack[-3:]]
+
+        features = primeira_parte + segunda_parte
+
+        #Os 3 primeiros elementos do buffer (3 features)
+        terceira_parte = [ex['word'][x] for x in buf[:3]]
+
+        #Quando len(buf) > 3, vazio
+        quarta_parte = [self.NULL] * (3 - len(buf))
+
+        features += terceira_parte + quarta_parte
+
         if self.use_pos:
+            ###### POS Tags das 3 primeiras palavras no topo da pilha (3 features)
             p_features = [self.P_NULL] * (3 - len(stack)) + [ex['pos'][x] for x in stack[-3:]]
+
+            ###### POS Tags das 3 primeiras palavras no buffer (3 features)
             p_features += [ex['pos'][x] for x in buf[:3]] + [self.P_NULL] * (3 - len(buf))
 
         for i in range(2):
             if i < len(stack):
+                #Quando i==0, elemento no topo da pilha
+                #Quando i==1, segundo elemento a partir do topo da pilha
                 k = stack[-i-1]
                 lc = get_lc(k)
                 rc = get_rc(k)
                 llc = get_lc(lc[0]) if len(lc) > 0 else []
                 rrc = get_rc(rc[0]) if len(rc) > 0 else []
 
+                ####### 6 features relativas a palavras
+                #Primeiro filho mais à esquerda do primeiro/segundo elemendo da pilha
                 features.append(ex['word'][lc[0]] if len(lc) > 0 else self.NULL)
+
+                #Primeiro filho mais à direita do primeiro/segundo elemento da pilha
                 features.append(ex['word'][rc[0]] if len(rc) > 0 else self.NULL)
+
+                #Segundo filho mais à esquerda do primeiro/segundo elemento da pilha
                 features.append(ex['word'][lc[1]] if len(lc) > 1 else self.NULL)
+
+                #Segundo filho mas à direita do primeiro/segundo elemento da pilha
                 features.append(ex['word'][rc[1]] if len(rc) > 1 else self.NULL)
+
+                #Primeiro neto mais à esquerda do primeiro/segundo elemento da pilha
                 features.append(ex['word'][llc[0]] if len(llc) > 0 else self.NULL)
+
+                #Primeito neto mas à direita do primeiro/segundo elemento da pilha
                 features.append(ex['word'][rrc[0]] if len(rrc) > 0 else self.NULL)
 
+                ######## 6 features relativas a tags
                 if self.use_pos:
                     p_features.append(ex['pos'][lc[0]] if len(lc) > 0 else self.P_NULL)
                     p_features.append(ex['pos'][rc[0]] if len(rc) > 0 else self.P_NULL)
@@ -145,6 +180,7 @@ class Parser(object):
                     p_features.append(ex['pos'][llc[0]] if len(llc) > 0 else self.P_NULL)
                     p_features.append(ex['pos'][rrc[0]] if len(rrc) > 0 else self.P_NULL)
 
+                ######## 6 features relativas a dependencias
                 if self.use_dep:
                     l_features.append(ex['label'][lc[0]] if len(lc) > 0 else self.L_NULL)
                     l_features.append(ex['label'][rc[0]] if len(rc) > 0 else self.L_NULL)
