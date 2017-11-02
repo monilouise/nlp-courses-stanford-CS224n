@@ -18,10 +18,12 @@ logger = logging.getLogger("hw3.q3.1")
 logger.setLevel(logging.DEBUG)
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
+
 class GRUCell(tf.nn.rnn_cell.RNNCell):
     """Wrapper around our GRU cell implementation that allows us to play
     nicely with TensorFlow.
     """
+
     def __init__(self, input_size, state_size):
         self.input_size = input_size
         self._state_size = state_size
@@ -65,7 +67,21 @@ class GRUCell(tf.nn.rnn_cell.RNNCell):
         # be defined elsewhere!
         with tf.variable_scope(scope):
             ### YOUR CODE HERE (~20-30 lines)
-            pass
+            xav = tf.contrib.layers.xavier_initializer(uniform=True, seed=None, dtype=tf.float32)
+            W_r = tf.get_variable("W_r", initializer=xav, shape=(self.state_size, self.state_size))
+            U_r = tf.get_variable("U_r", initializer=xav, shape=(self.input_size, self.state_size))
+            b_r = tf.get_variable("b_r", initializer=xav, shape=self.state_size)
+            W_z = tf.get_variable("W_z", initializer=xav, shape=(self.state_size, self.state_size))
+            U_z = tf.get_variable("U_z", initializer=xav, shape=(self.input_size, self.state_size))
+            b_z = tf.get_variable("b_z", initializer=xav, shape=self.state_size)
+            W_o = tf.get_variable("W_o", initializer=xav, shape=(self.state_size, self.state_size))
+            U_o = tf.get_variable("U_o", initializer=xav, shape=(self.input_size, self.state_size))
+            b_o = tf.get_variable("b_o", initializer=xav, shape=self.state_size)
+
+            z_t = tf.sigmoid(tf.matmul(inputs, U_z) + tf.matmul(state, W_z) + b_z)
+            r_t = tf.sigmoid(tf.matmul(inputs, U_r) + tf.matmul(state, W_r) + b_r)
+            o_t = tf.tanh(tf.matmul(inputs, U_o) + tf.multiply(r_t, tf.matmul(state, W_o)) + b_o)
+            new_state = tf.multiply(z_t, state) + tf.multiply(1 - z_t, o_t)
             ### END YOUR CODE ###
         # For a GRU, the output and state are the same (N.B. this isn't true
         # for an LSTM, though we aren't using one of those in our
@@ -73,22 +89,23 @@ class GRUCell(tf.nn.rnn_cell.RNNCell):
         output = new_state
         return output, new_state
 
+
 def test_gru_cell():
     with tf.Graph().as_default():
         with tf.variable_scope("test_gru_cell"):
-            x_placeholder = tf.placeholder(tf.float32, shape=(None,3))
-            h_placeholder = tf.placeholder(tf.float32, shape=(None,2))
+            x_placeholder = tf.placeholder(tf.float32, shape=(None, 3))
+            h_placeholder = tf.placeholder(tf.float32, shape=(None, 2))
 
             with tf.variable_scope("gru"):
-                tf.get_variable("U_r", initializer=np.array(np.eye(3,2), dtype=np.float32))
-                tf.get_variable("W_r", initializer=np.array(np.eye(2,2), dtype=np.float32))
-                tf.get_variable("b_r",  initializer=np.array(np.ones(2), dtype=np.float32))
-                tf.get_variable("U_z", initializer=np.array(np.eye(3,2), dtype=np.float32))
-                tf.get_variable("W_z", initializer=np.array(np.eye(2,2), dtype=np.float32))
-                tf.get_variable("b_z",  initializer=np.array(np.ones(2), dtype=np.float32))
-                tf.get_variable("U_o", initializer=np.array(np.eye(3,2), dtype=np.float32))
-                tf.get_variable("W_o", initializer=np.array(np.eye(2,2), dtype=np.float32))
-                tf.get_variable("b_o",  initializer=np.array(np.ones(2), dtype=np.float32))
+                tf.get_variable("U_r", initializer=np.array(np.eye(3, 2), dtype=np.float32))
+                tf.get_variable("W_r", initializer=np.array(np.eye(2, 2), dtype=np.float32))
+                tf.get_variable("b_r", initializer=np.array(np.ones(2), dtype=np.float32))
+                tf.get_variable("U_z", initializer=np.array(np.eye(3, 2), dtype=np.float32))
+                tf.get_variable("W_z", initializer=np.array(np.eye(2, 2), dtype=np.float32))
+                tf.get_variable("b_z", initializer=np.array(np.ones(2), dtype=np.float32))
+                tf.get_variable("U_o", initializer=np.array(np.eye(3, 2), dtype=np.float32))
+                tf.get_variable("W_o", initializer=np.array(np.eye(2, 2), dtype=np.float32))
+                tf.get_variable("b_o", initializer=np.array(np.ones(2), dtype=np.float32))
 
             tf.get_variable_scope().reuse_variables()
             cell = GRUCell(3, 2)
@@ -104,7 +121,7 @@ def test_gru_cell():
                     [0.2, 0.5],
                     [-0.3, -0.3]], dtype=np.float32)
                 y = np.array([
-                    [ 0.320, 0.555],
+                    [0.320, 0.555],
                     [-0.006, 0.020]], dtype=np.float32)
                 ht = y
 
@@ -115,10 +132,12 @@ def test_gru_cell():
                 assert np.allclose(y_, ht_), "output and state should be equal."
                 assert np.allclose(ht, ht_, atol=1e-2), "new state vector does not seem to be correct."
 
+
 def do_test(_):
     logger.info("Testing gru_cell")
     test_gru_cell()
     logger.info("Passed!")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Tests the GRU cell implemented as part of Q3 of Homework 3')

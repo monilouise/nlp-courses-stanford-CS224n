@@ -87,6 +87,8 @@ class SequencePredictor(Model):
 
         x = self.inputs_placeholder
         ### YOUR CODE HERE (~2-3 lines)
+        y = tf.nn.dynamic_rnn(cell, x, initial_state=tf.zeros(shape=(1, cell.state_size)))
+        preds = tf.sigmoid(y)
         ### END YOUR CODE
 
         return preds #state # preds
@@ -143,7 +145,13 @@ class SequencePredictor(Model):
         # - Remember to clip gradients only if self.config.clip_gradients
         # is True.
         # - Remember to set self.grad_norm
+        gradients = optimizer.compute_gradients(loss)
 
+        if self.config.clip_gradients:
+            gradients = tf.clip_by_global_norm(gradients, self.config.max_grad_norm)
+            self.global_norm = tf.global_norm(gradients)
+
+        train_op = optimizer.apply_gradients(gradients)
         ### END YOUR CODE
 
         assert self.grad_norm is not None, "grad_norm was not set properly!"
